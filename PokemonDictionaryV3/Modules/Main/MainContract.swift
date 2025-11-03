@@ -14,6 +14,8 @@ protocol MainViewToPresenter: AnyObject {
     func getPokemonCount() -> Int
     func getPokemon(index: Int) -> Pokemon
     func loadMorePokemons() -> [IndexPath]
+    func navigateToDetailWithSinglePokemon(index: Int)
+    func navigateToDetailWithSelectedPokemons()
     var selectedIdList: [Int] {get set}
 }
 
@@ -32,9 +34,11 @@ protocol MainPresenterToInteractor: AnyObject {
 }
 
 protocol MainPresenterToRouter: AnyObject{
+    func navigateTodetail(detailViewController: DetailViewController)
 }
 
 protocol MainRouterToPresenter: AnyObject{
+    
 }
 
 protocol MainInteractorProtocol: AnyObject {

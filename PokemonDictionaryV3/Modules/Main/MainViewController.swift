@@ -71,8 +71,7 @@ final class MainViewController: UIViewController, MainView {
         if(presenter.getSelectedIdListCount() < 3){
             return
         }else if (presenter.getSelectedIdListCount() == 3){
-            let detailViewController = createDetailViewControllerMultiple()
-            navigationController?.pushViewController(detailViewController, animated: true)
+            presenter.navigateToDetailWithSelectedPokemons()
         }
     }
 
@@ -134,22 +133,7 @@ extension MainViewController: UICollectionViewDataSource {
 
 extension MainViewController: UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        let detailViewController = createDetailViewControllerSingle(with: indexPath.row)
-        navigationController?.pushViewController(detailViewController, animated: true)
-    }
-    
-    private func createDetailViewControllerSingle(with index: Int) -> DetailViewController {
-        let detailModule = DetailModule()
-        let pokemon = presenter.getPokemon(index: index)
-        let detailViewController = detailModule.build(with: [pokemon.id])
-        return detailViewController
-    }
-    
-    private func createDetailViewControllerMultiple() -> DetailViewController {
-        let detailModule = DetailModule()
-        let selectedIdList = presenter.selectedIdList
-        let detailViewController = detailModule.build(with: selectedIdList)
-        return detailViewController
+        presenter.navigateToDetailWithSinglePokemon(index: indexPath.row)
     }
     
     override func viewWillTransition(to size: CGSize, with coordinator: any UIViewControllerTransitionCoordinator)

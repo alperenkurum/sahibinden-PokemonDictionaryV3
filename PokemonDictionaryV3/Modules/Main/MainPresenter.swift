@@ -21,12 +21,33 @@ final class MainPresenter: MainPresenterProtocol {
         self.interactor = interactor
         self.router = router
     }
+    
 }
 
 // MARK: - Introduction View to Presenter
 extension MainPresenter: MainViewToPresenter {
+    func navigateToDetailWithSinglePokemon(index: Int) {
+        router.navigateTodetail(detailViewController: createDetailViewControllerSingle(with: index))
+    }
+    
+    func navigateToDetailWithSelectedPokemons() {
+        router.navigateTodetail(detailViewController: createDetailViewControllerMultiple())
+    }
+    
     func getPokemon(index: Int) -> Pokemon {
         return pokemons[index]
+    }
+    
+    private func createDetailViewControllerSingle(with index: Int) -> DetailViewController {
+        let detailModule = DetailModule()
+        let detailViewController = detailModule.build(with: [pokemons[index].id])
+        return detailViewController
+    }
+    
+    private func createDetailViewControllerMultiple() -> DetailViewController {
+        let detailModule = DetailModule()
+        let detailViewController = detailModule.build(with: selectedIdList)
+        return detailViewController
     }
     
     func onLoad() {
@@ -40,7 +61,6 @@ extension MainPresenter: MainViewToPresenter {
         interactor.fetchPokemons()
         let endIndex = pokemons.count
         let newIndexPaths = (startIndex..<endIndex).map {IndexPath(item: $0, section: 0)}
-        
         return newIndexPaths
     }
     

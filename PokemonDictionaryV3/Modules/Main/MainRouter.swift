@@ -11,9 +11,10 @@ import UIKit
 final class MainRouter: MainRouterProtocol {
     weak var presenter: (any MainRouterToPresenter)?
     weak var view: (UIViewController & MainView)?
-    
 }
 
 extension MainRouter: MainPresenterToRouter {
-    
+    func navigateTodetail(detailViewController: DetailViewController) {
+        view?.navigationController?.pushViewController(detailViewController, animated: true)
+    }
 }

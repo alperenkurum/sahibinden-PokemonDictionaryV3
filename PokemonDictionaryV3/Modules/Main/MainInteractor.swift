@@ -10,10 +10,7 @@ import Foundation
 // MARK: - Main Interactor
 final class MainInteractor: MainInteractorProtocol {
     weak var presenter: MainInteractorToPresenter?
-    //presenter
-    //var selectedIdList: [Int] = []
     private var apiCaller = ApiCaller()
-    
 }
 
 // MARK: - Introduction Presenter to Interactor
@@ -36,7 +33,7 @@ extension MainInteractor: MainPresenterToInteractor {
                 }
                 
             }catch{
-                fatalError("blap")
+                fatalError("Network Error")
             }
         }
     }
