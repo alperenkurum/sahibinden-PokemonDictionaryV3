@@ -21,51 +21,38 @@ final class MainPresenter: MainPresenterProtocol {
         self.interactor = interactor
         self.router = router
     }
-    
 }
 
 // MARK: - Introduction View to Presenter
 extension MainPresenter: MainViewToPresenter {
-    func navigateToDetailWithSinglePokemon(index: Int) {
-        router.navigateTodetail(detailViewController: createDetailViewControllerSingle(with: index))
+    func didStartedComparing() {
+        router.navigateToDetail(with: selectedIdList)
     }
     
-    func navigateToDetailWithSelectedPokemons() {
-        router.navigateTodetail(detailViewController: createDetailViewControllerMultiple())
+    func didSelectItem(at index: Int) {
+        router.navigateToDetail(with: [pokemons[index].id])
     }
     
     func getPokemon(index: Int) -> Pokemon {
-        return pokemons[index]
-    }
-    
-    private func createDetailViewControllerSingle(with index: Int) -> DetailViewController {
-        let detailModule = DetailModule()
-        let detailViewController = detailModule.build(with: [pokemons[index].id])
-        return detailViewController
-    }
-    
-    private func createDetailViewControllerMultiple() -> DetailViewController {
-        let detailModule = DetailModule()
-        let detailViewController = detailModule.build(with: selectedIdList)
-        return detailViewController
+        pokemons[index]
     }
     
     func onLoad() {
-        view?.toggleLoading()
+        view?.setLoading(with: true)
         interactor.fetchPokemons()
     }
     
     func loadMorePokemons() -> [IndexPath]{
-        view?.toggleLoading()
+        view?.setLoading(with: true)
         let startIndex = pokemons.count
         interactor.fetchPokemons()
         let endIndex = pokemons.count
-        let newIndexPaths = (startIndex..<endIndex).map {IndexPath(item: $0, section: 0)}
+        let newIndexPaths = (startIndex..<endIndex).map { IndexPath(item: $0, section: 0) }
         return newIndexPaths
     }
     
     func getSelectedIdListCount() -> Int {
-        return selectedIdList.count
+        selectedIdList.count
     }
     
     func removeAllSelectedIdList() {
@@ -82,10 +69,11 @@ extension MainPresenter: MainInteractorToPresenter {
     func fetchPokemonsDidSuccess(pokemons: [Pokemon]){
         self.pokemons.append(contentsOf: pokemons)
         view?.reloadPokemonData()
-        view?.toggleLoading()
+        view?.setLoading(with: false)
     }
     
     func fetchPokemonsDidFail(message: String){
+        router.presentAlert(message: message)
         print(message)
     }
 }

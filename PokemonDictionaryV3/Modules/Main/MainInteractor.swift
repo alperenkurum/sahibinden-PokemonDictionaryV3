@@ -10,7 +10,9 @@ import Foundation
 // MARK: - Main Interactor
 final class MainInteractor: MainInteractorProtocol {
     weak var presenter: MainInteractorToPresenter?
-    private var apiCaller = ApiCaller()
+    private let service = PokemonService()
+    private var currentPage = 0
+    private var pageLimit = 24
 }
 
 // MARK: - Introduction Presenter to Interactor
@@ -18,22 +20,11 @@ extension MainInteractor: MainPresenterToInteractor {
     func fetchPokemons() {
         Task{
             do{
-                let result = try await apiCaller.getPokemonURLs(Limit: 24)
-                switch result {
-                case .success(let pokemonResult):
-                    let resultPoke = try await apiCaller.getPokemonDatas(URLs: pokemonResult)
-                    switch resultPoke {
-                    case .success(let pokemonResult):
-                        self.presenter?.fetchPokemonsDidSuccess(pokemons: pokemonResult)
-                    case .failure(let error):
-                        self.presenter?.fetchPokemonsDidFail(message: error.localizedDescription)
-                    }
-                case .failure(let error):
-                    print(error)
-                }
-                
+                let resultPoke = try await service.fetchPokemonBatch(limit: pageLimit, offset: pageLimit * currentPage)
+                currentPage+=1
+                self.presenter?.fetchPokemonsDidSuccess(pokemons: resultPoke)
             }catch{
-                fatalError("Network Error")
+                return
             }
         }
     }

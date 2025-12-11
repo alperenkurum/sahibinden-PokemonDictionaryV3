@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct PokemonDetail: Decodable{
+struct PokemonDetail: Decodable, Hashable{
     var id: Int
     var name: String
     var sprites: Sprites
@@ -16,11 +16,11 @@ struct PokemonDetail: Decodable{
     var abilities: [Ability]
 }
 
-struct Ability: Decodable{
+struct Ability: Decodable, Hashable{
     var ability: AbilityDetail
     var isHidden: Bool
 }
 
-struct AbilityDetail: Decodable{
+struct AbilityDetail: Decodable, Hashable{
     var name: String
 }

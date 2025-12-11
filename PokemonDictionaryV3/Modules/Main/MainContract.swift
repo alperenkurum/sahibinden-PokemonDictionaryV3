@@ -14,13 +14,13 @@ protocol MainViewToPresenter: AnyObject {
     func getPokemonCount() -> Int
     func getPokemon(index: Int) -> Pokemon
     func loadMorePokemons() -> [IndexPath]
-    func navigateToDetailWithSinglePokemon(index: Int)
-    func navigateToDetailWithSelectedPokemons()
+    func didSelectItem(at index: Int)
+    func didStartedComparing()
     var selectedIdList: [Int] {get set}
 }
 
 protocol MainPresenterToView: AnyObject {
-    func toggleLoading()
+    func setLoading(with bool: Bool)
     func reloadPokemonData()
 }
 
@@ -34,7 +34,8 @@ protocol MainPresenterToInteractor: AnyObject {
 }
 
 protocol MainPresenterToRouter: AnyObject{
-    func navigateTodetail(detailViewController: DetailViewController)
+    func navigateToDetail(with idList: [Int])
+    func presentAlert(message: String)
 }
 
 protocol MainRouterToPresenter: AnyObject{

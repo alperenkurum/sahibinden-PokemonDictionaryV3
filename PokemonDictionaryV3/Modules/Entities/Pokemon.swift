@@ -7,12 +7,16 @@
 
 import Foundation
 
-struct Pokemon: Decodable {
+struct Pokemon: Decodable, Hashable {
     var name: String
     var id: Int
     var sprites: Sprites
 }
-struct Sprites: Decodable {
+struct Sprites: Decodable, Hashable {
     var frontDefault: String
     var backDefault: String
+}
+
+enum Section{
+    case main
 }

@@ -12,7 +12,6 @@ final class DetailPresenter: DetailPresenterProtocol {
     weak var view: DetailPresenterToView?
     var interactor: DetailPresenterToInteractor
     var router: DetailPresenterToRouter
-    private var apiCaller = ApiCaller()
 
     // MARK: - Initialization
     init(view: DetailPresenterToView, interactor: DetailPresenterToInteractor, router: DetailPresenterToRouter) {

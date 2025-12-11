@@ -7,17 +7,47 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "C1A59F17-70F4-48D7-B29A-5CE452B26F63"
+            uuid = "6F22B1B9-D662-4DB4-8258-BCCAC5306B11"
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "PokemonDictionaryV3/Modules/Detail/DetailInteractor.swift"
+            filePath = "PokemonDictionaryV3/Constants.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "42"
-            endingLineNumber = "42"
-            landmarkName = "apiCall(ID:)"
-            landmarkType = "7">
+            startingLineNumber = "8"
+            endingLineNumber = "8"
+            landmarkName = "Contants"
+            landmarkType = "14">
+            <Locations>
+               <Location
+                  uuid = "6F22B1B9-D662-4DB4-8258-BCCAC5306B11 - dd8af2889720fc2b"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "one-time initialization function for baseURL"
+                  moduleName = "PokemonDictionaryV3.debug.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/ibrahim.kurum/Desktop/PokemonDictionaryV3/PokemonDictionaryV3/Constants.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "9"
+                  endingLineNumber = "9">
+               </Location>
+               <Location
+                  uuid = "6F22B1B9-D662-4DB4-8258-BCCAC5306B11 - 88c3ab940f9e5a85"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "PokemonDictionaryV3.Contants.baseURL.unsafeMutableAddressor : Swift.String"
+                  moduleName = "PokemonDictionaryV3.debug.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/ibrahim.kurum/Desktop/PokemonDictionaryV3/PokemonDictionaryV3/Constants.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "9"
+                  endingLineNumber = "9">
+               </Location>
+            </Locations>
          </BreakpointContent>
       </BreakpointProxy>
    </Breakpoints>

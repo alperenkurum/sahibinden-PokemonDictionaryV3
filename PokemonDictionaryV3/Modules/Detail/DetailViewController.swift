@@ -64,15 +64,12 @@ final class DetailViewController: UIViewController, DetailView {
         stackView.addArrangedSubview(pokemonCardView2)
         stackView.addArrangedSubview(pokemonCardView3)
         scrollView.addSubview(stackView)
+        scrollView.pin(to: view)
         NSLayoutConstraint.activate([
             stackView.topAnchor.constraint(equalTo: scrollView.contentLayoutGuide.topAnchor),
             stackView.bottomAnchor.constraint(equalTo: scrollView.contentLayoutGuide.bottomAnchor),
             stackView.widthAnchor.constraint(equalTo: scrollView.frameLayoutGuide.widthAnchor),
             stackView.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
-            scrollView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
-            scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            scrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
         ])
     }
 }

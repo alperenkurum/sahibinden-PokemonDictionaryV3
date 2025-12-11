@@ -13,14 +13,9 @@ final class MainViewController: UIViewController, MainView {
     var presenter: MainViewToPresenter!
     // swiftlint:enable implicitly_unwrapped_optional
     
-    private var collectionViewPokemon: UICollectionView = {
-        let layout = UICollectionViewFlowLayout()
-        layout.scrollDirection = .vertical
-        let collectionView  = UICollectionView(frame: .zero, collectionViewLayout: layout)
-        collectionView.backgroundColor = .systemBackground
-        collectionView.translatesAutoresizingMaskIntoConstraints = false
-        return collectionView
-    }()
+    private var collectionViewPokemon: UICollectionView!
+    
+    private var dataSource: UICollectionViewDiffableDataSource<Section, Pokemon>!
     
     private var isChecked: Bool = false
     private var isLoading: Bool = true
@@ -28,8 +23,70 @@ final class MainViewController: UIViewController, MainView {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
         configureUI()
         presenter.onLoad()
+    }
+    
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        updateLayoutForCurrentOrientation()
+    }
+    
+    private func updateLayoutForCurrentOrientation() {
+        guard let layout = collectionViewPokemon.collectionViewLayout as? UICollectionViewFlowLayout else { return }
+
+        let inset = layout.sectionInset.left + layout.sectionInset.right
+        let spacing = layout.minimumInteritemSpacing
+
+        let width = collectionViewPokemon.bounds.width
+
+        if width == 0 { return } 
+
+        let columns: CGFloat = UIDevice.current.orientation.isPortrait ? 2 : 3
+
+        let itemWidth = (width - inset - (spacing * (columns - 1))) / columns
+
+        layout.itemSize = CGSize(width: itemWidth, height: itemWidth)
+        layout.invalidateLayout()
+    }
+
+    
+    override func viewWillTransition(to size: CGSize, with coordinator: any UIViewControllerTransitionCoordinator)
+    {
+        super.viewWillTransition(to: size, with: coordinator)
+        collectionViewPokemon.collectionViewLayout.invalidateLayout()
+        coordinator.animate { [weak self] _ in
+            guard let self else { return }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                self.checkRotation()
+            }
+            
+        }
+    }
+    
+    private func checkRotation(){
+        guard let layout = collectionViewPokemon.collectionViewLayout as? UICollectionViewFlowLayout else { return }
+        
+        switch UIDevice.current.orientation {
+        case .portrait, .portraitUpsideDown:
+            let insetSpacing = layout.sectionInset.left + layout.sectionInset.right
+            let size = (collectionViewPokemon.frame.width - insetSpacing - (2 * layout.minimumInteritemSpacing)) / 2
+            layout.itemSize = CGSize(width: size, height: size)
+            //layout.invalidateLayout()
+        case .landscapeLeft, .landscapeRight:
+            let size = (collectionViewPokemon.frame.width - layout.sectionInset.left - layout.sectionInset.right - (2 * layout.minimumInteritemSpacing)) / 3
+            layout.itemSize = CGSize(width: size, height: size)
+            //layout.invalidateLayout()
+        case .unknown:
+            print("Unknown orientation")
+        case .faceUp:
+            print("Face up orientation")
+        case .faceDown:
+            print("Face down orientation")
+        @unknown default:
+            print("default")
+        }
     }
     
     private func configureUI() {
@@ -45,18 +102,23 @@ final class MainViewController: UIViewController, MainView {
     }
     
     private func setRightNavBarButton() {
-        let action = isComparing ? UIAction{[weak self] _ in
-                    self?.goComparing()
-                } : UIAction{[weak self] _ in
-                    self?.startComparing()
-                }
+        let triggerCompare = UIAction{ [weak self] _ in
+            self?.goComparing()
+        }
+        let startCompare = UIAction{[weak self] _ in
+            self?.startComparing()
+        }
+        let action = isComparing ? triggerCompare: startCompare
         
-        let barButtonItem = isComparing ? UIBarButtonItem.SystemItem.action : UIBarButtonItem.SystemItem.compose
+        let barButtonItem: UIBarButtonItem.SystemItem = isComparing ? .action : .compose
         navigationItem.rightBarButtonItem = UIBarButtonItem(systemItem: barButtonItem, primaryAction: action)
     }
     
     private func setLeftNavBarButton() {
-        let barButtonItem = UIBarButtonItem(systemItem: .cancel, primaryAction: UIAction{[weak self] _ in self?.cancelComparing() })
+        let action = UIAction{ [weak self] _ in
+            self?.cancelComparing()
+        }
+        let barButtonItem = UIBarButtonItem(systemItem: .cancel, primaryAction: action)
         barButtonItem.isHidden = !isComparing
         navigationItem.leftBarButtonItem = barButtonItem
     }
@@ -68,10 +130,9 @@ final class MainViewController: UIViewController, MainView {
     }
 
     private func goComparing() {
-        if(presenter.getSelectedIdListCount() < 3){
-            return
-        }else if (presenter.getSelectedIdListCount() == 3){
-            presenter.navigateToDetailWithSelectedPokemons()
+        guard presenter.getSelectedIdListCount() >= 3 else { return }
+        if (presenter.getSelectedIdListCount() == 3) {
+            presenter.didStartedComparing()
         }
     }
 
@@ -85,30 +146,26 @@ final class MainViewController: UIViewController, MainView {
     private func configureCollectionView() {
         setupCollectionView()
         collectionViewPokemon.backgroundColor = .systemBackground
-        collectionViewPokemon.translatesAutoresizingMaskIntoConstraints = false
         collectionViewPokemon.register(MainCollectionViewCell.self, forCellWithReuseIdentifier: MainCollectionViewCell.identifier)
+        collectionViewPokemon.register(LoadingFooterView.self, forSupplementaryViewOfKind: UICollectionView.elementKindSectionFooter,
+                                       withReuseIdentifier: LoadingFooterView.identifier)
         collectionViewPokemon.delegate = self
         collectionViewPokemon.dataSource = self
         collectionViewPokemon.pin(to: view)
-        collectionViewPokemon.register(LoadingFooterView.self, forSupplementaryViewOfKind: UICollectionView.elementKindSectionFooter, withReuseIdentifier: LoadingFooterView.identifier)
     }
     
     private func setupCollectionView() {
         let layout = UICollectionViewFlowLayout()
-        var size : CGFloat = 0
         layout.scrollDirection = .vertical
         layout.minimumInteritemSpacing = 8
         layout.minimumLineSpacing = 12
         layout.sectionInset = UIEdgeInsets(top: 5, left: 5, bottom: 5, right: 5)
-        size = (view.frame.width - layout.sectionInset.left - layout.sectionInset.right - layout.minimumInteritemSpacing) / 2
-        
-        if UIDevice.current.orientation.isPortrait{
-            size = (view.frame.width - layout.sectionInset.left - layout.sectionInset.right - layout.minimumInteritemSpacing) / 2
-        }else if UIDevice.current.orientation.isLandscape{
-            size = (view.frame.width - layout.sectionInset.left - layout.sectionInset.right - (2 * layout.minimumInteritemSpacing)) / 3
-        }
-        layout.itemSize = CGSize(width: size, height: size)
+
+        // BOYUT -> viewDidLayoutSubviews'DA BELİRLERSİN
+        layout.itemSize = .zero
+
         collectionViewPokemon = UICollectionView(frame: .zero, collectionViewLayout: layout)
+        collectionViewPokemon.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(collectionViewPokemon)
     }
 
@@ -116,7 +173,7 @@ final class MainViewController: UIViewController, MainView {
 
 extension MainViewController: UICollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return presenter.getPokemonCount()
+        presenter.getPokemonCount()
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
@@ -125,7 +182,8 @@ extension MainViewController: UICollectionViewDataSource {
         }
         //TODO: -fill the cell after apicall for image
         let pokemon = presenter.getPokemon(index: indexPath.row)
-        cell.set(with: pokemon.sprites.frontDefault, with: pokemon.name.capitalizingFirstLetter(),check: isChecked, id: pokemon.id, selectionStarted: isComparing)
+        let uiModel = MainCollectionViewCellUIModel(imageURL: pokemon.sprites.frontDefault, title: pokemon.name.capitalizingFirstLetter(), check: isChecked, id: pokemon.id, selectionStarted: isComparing)
+        cell.set(uiModel: uiModel)
         cell.delegateSelection = self
         return cell
     }
@@ -133,56 +191,27 @@ extension MainViewController: UICollectionViewDataSource {
 
 extension MainViewController: UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        presenter.navigateToDetailWithSinglePokemon(index: indexPath.row)
-    }
-    
-    override func viewWillTransition(to size: CGSize, with coordinator: any UIViewControllerTransitionCoordinator)
-    {
-        super.viewWillTransition(to: size, with: coordinator)
-        coordinator.animate { [weak self] _ in
-            guard let self = self else { return }
-            guard let layout = collectionViewPokemon.collectionViewLayout as? UICollectionViewFlowLayout else { return }
-            
-            switch UIDevice.current.orientation {
-            case .portrait, .portraitUpsideDown:
-                let size = (collectionViewPokemon.frame.width - layout.sectionInset.left - layout.sectionInset.right - layout.minimumInteritemSpacing) / 2
-                layout.itemSize = CGSize(width: size, height: size)
-                layout.invalidateLayout()
-            case .landscapeLeft, .landscapeRight:
-                let size = (collectionViewPokemon.frame.width - layout.sectionInset.left - layout.sectionInset.right - (2 * layout.minimumInteritemSpacing)) / 3
-                layout.itemSize = CGSize(width: size, height: size)
-                layout.invalidateLayout()
-            case .unknown:
-                printContent("Unknown orientation")
-            case .faceUp:
-                printContent("Face up orientation")
-            case .faceDown:
-                printContent("Face down orientation")
-            @unknown default:
-                print("default")
-            }
-        }
+        presenter.didSelectItem(at: indexPath.row)
     }
     
     func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
         let lastItemIndex = collectionView.numberOfItems(inSection: 0) - 1
-        if indexPath.row == lastItemIndex && isLoading {
-            guard let newIndexPaths = presenter?.loadMorePokemons() else { return }
-            self.collectionViewPokemon.insertItems(at: newIndexPaths)
-        }
+        guard indexPath.row == lastItemIndex && !isLoading,
+              let newIndexPaths = presenter?.loadMorePokemons() else { return }
+        self.collectionViewPokemon.insertItems(at: newIndexPaths)
     }
 }
 
 // MARK: - UICollectionViewDelegateFlowLayout
 extension MainViewController: UICollectionViewDelegateFlowLayout {
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, referenceSizeForFooterInSection section: Int) -> CGSize {
-        return CGSize(width: view.frame.width, height: 50)
+        CGSize(width: view.frame.width, height: 50)
     }
     
     func collectionView(_ collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> UICollectionReusableView {
         if kind == UICollectionView.elementKindSectionFooter {
             let footer = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: LoadingFooterView.identifier, for: indexPath) as! LoadingFooterView
-            if !isLoading {
+            if isLoading {
                 footer.startAnimating()
             } else {
                 footer.stopAnimating()
@@ -196,13 +225,13 @@ extension MainViewController: UICollectionViewDelegateFlowLayout {
 // MARK: - OnSeletionDelegate Protocol nereye alcam la bunu
 extension MainViewController: OnSelectionDelegate{
     func getCount() -> Int {
-        return presenter.selectedIdList.count
+        presenter.selectedIdList.count
     }
+    
     func selectionChanged(ID id: Int) {
         if !presenter.selectedIdList.contains(id){
             presenter.selectedIdList.append(id)
-        }else{
-            guard let position = presenter.selectedIdList.firstIndex(of: id)else{ return }
+        } else if let position = presenter.selectedIdList.firstIndex(of: id) {
             presenter.selectedIdList.remove(at: position)
         }
     }
@@ -210,14 +239,13 @@ extension MainViewController: OnSelectionDelegate{
 
 // MARK: - Introduction Presenter to View
 extension MainViewController: MainPresenterToView {
-    func toggleLoading() {
-        isLoading.toggle()
+    func setLoading(with bool: Bool) {
+        self.isLoading = bool
     }
     
     func reloadPokemonData() {
         DispatchQueue.main.async {
             self.collectionViewPokemon.reloadData()
         }
-
     }
 }
